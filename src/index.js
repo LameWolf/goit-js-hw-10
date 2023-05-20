@@ -1,7 +1,11 @@
 import './css/styles.css';
 import debounce from 'lodash.debounce';
-import Notiflix from 'notiflix';
-import fetchCountries from './js/fetchCountries.js';
+import {
+  getAboutManyCountriesMessage,
+  getFailureMessage,
+  getCountryMessage,
+} from './js/notification.js';
+import { fetchCountries } from './js/fetchCountries.js';
 import getRefs from './js/getRefs.js';
 import { renderCountryList, renderCountryInfo } from './js/render.js';
 
@@ -19,15 +23,8 @@ const onSearch = debounce(evt => {
 
   fetchCountries(searchCountry)
     .then(countries => {
-      if (countries.length === 0) {
-        Notiflix.Notify.failure('Oops, there is no country with that name');
-        return;
-      }
-
       if (countries.length > 10) {
-        Notiflix.Notify.info(
-          'Too many matches found. Please enter a more specific name.'
-        );
+        getAboutManyCountriesMessage();
         return;
       }
 
@@ -38,11 +35,15 @@ const onSearch = debounce(evt => {
 
       if (countries.length === 1) {
         renderCountryInfo(countries[0], refs.countryInfo);
+        getCountryMessage();
         return;
       }
     })
     .catch(error => {
-      Notiflix.Notify.failure(error.message);
+      getFailureMessage();
+      if (error.response && error.response.status === 404) {
+        getFailureMessage();
+      }
     });
 }, DEBOUNCE_DELAY);
 
